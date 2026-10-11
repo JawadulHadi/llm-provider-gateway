@@ -9,6 +9,41 @@ your code -> Gateway -> [ollama] -> retry with jitter -> timeout -> circuit brea
                      -> [anthropic]            ... first healthy provider wins
 ```
 
+## Architecture
+
+```mermaid
+flowchart TD
+    App["Your code"] --> ChatJson["chatJson(gateway, req, zodSchema)<br/>structured.ts"]
+    App --> Chat
+    ChatJson -- "ask for JSON" --> Chat
+    ChatJson -- "zod fails → 1 repair turn<br/>with the validation problems" --> Chat
+
+    subgraph GW["Gateway.chat() · gateway.ts"]
+        Chat["for each provider, in order"] --> Breaker{"circuit open?<br/>N failures → cooldown"}
+        Breaker -- "open" --> Skip["skip: circuit_open"] --> Next["next provider"]
+        Breaker -- "closed / trial" --> Timeout["callWithTimeout()<br/>Promise.race + AbortSignal"]
+        Timeout -- "ok" --> Ledger["cost() from price table<br/>ledger: tokens, cost, latency"]
+        Ledger --> Result(["GatewayResult<br/>response, attempts, costUsd"])
+        Timeout -- "ProviderError" --> Kind{"error kind"}
+        Kind -- "bad_request" --> Fail(["AllProvidersFailedError<br/>fail fast, no fallback"])
+        Kind -- "rate_limit / server /<br/>network / timeout" --> Retry["backoffMs() equal jitter<br/>retry same provider ≤ maxRetries"]
+        Retry --> Timeout
+        Kind -- "auth / invalid_response /<br/>retries exhausted" --> Next
+        Next --> Chat
+    end
+    Next -- "none left" --> Fail2(["AllProvidersFailedError"])
+
+    subgraph Adapters["LLMProvider adapters · providers/"]
+        OAI["OpenAICompatibleProvider<br/>OpenAI, Groq, OpenRouter, LM Studio"]
+        Oll["OllamaProvider"]
+        Anth["AnthropicProvider<br/>system as separate field"]
+        Mock["MockProvider<br/>scripted, for tests"]
+    end
+    Timeout --> Adapters
+    OAI & Oll & Anth --> Http["postJson() · http.ts<br/>errorFromStatus(): 429, 401/403, 5xx, 4xx<br/>→ normalised ProviderError"]
+    Http --> APIs[("Provider HTTP APIs")]
+```
+
 ## Why it exists
 
 Provider SDKs differ in wire format, error shape and token accounting. This layer hides all of it
@@ -66,6 +101,17 @@ npm run typecheck && npm test      # 29 tests, no network, no API keys
 - **Prices are configuration, not code.** They change often and differ per contract, so none are bundled.
   Unknown models report `costUsd: null` instead of a wrong number.
 - **Breaker state is per process** and in memory. Share it through Redis if you run many instances.
+
+## Install (free, no registry)
+
+This is a library, so there is nothing to host. Install it straight from GitHub; the `prepare`
+script builds `dist/` on install:
+
+```bash
+npm install github:JawadulHadi/llm-provider-gateway
+```
+
+Publishing to npm later is free for public packages (`npm publish`); `files` already limits the tarball to `dist/`.
 
 ## Known limits
 
