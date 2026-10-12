@@ -9,6 +9,11 @@ Every change adds an entry under **Unreleased** in the same pull request. CI che
 ## [Unreleased]
 
 ### Added
+- Hosted demo on Vercel: `public/index.html` plus the `api/demo.ts` function, which runs
+  `src/demo.ts` against mock providers (no model, no API key). It shows retries with backoff,
+  fallback, the circuit breaker opening, cost tracking and a `chatJson` repair. `vercel.json`
+  sets the build command and the `public` output directory, which fixes the Vercel error
+  "No Output Directory named public found". Test in `test/demo.test.ts`.
 - `CHANGELOG.md` (this file), a pull request template, and a CI job that fails a pull request
   which doesn't update the changelog. Label a PR `skip-changelog` to bypass it.
 - README "Changelog and contributing" section.
