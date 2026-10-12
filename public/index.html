@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>llm-provider-gateway demo</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 16px; }
+  pre { background: #f4f4f4; padding: 12px; overflow-x: auto; white-space: pre-wrap; }
+  @media (prefers-color-scheme: dark) { body { background: #111; color: #eee; } pre { background: #222; } a { color: #8ab4ff; } }
+</style>
+</head>
+<body>
+<h1>llm-provider-gateway</h1>
+<p>A provider-agnostic LLM layer in TypeScript: retries with jitter, timeouts, a fallback chain,
+a circuit breaker, cost tracking and zod-validated JSON output.
+Source: <a href="https://github.com/JawadulHadi/llm-provider-gateway">GitHub</a>.</p>
+<p>The run below uses <strong>mock providers</strong>, so no model is called. The primary
+rate-limits on every try, the gateway backs off, falls back and opens the primary's circuit, the fallback answers in prose,
+and <code>chatJson</code> asks once for a repair and validates the result.
+Raw JSON: <a href="/api/demo">/api/demo</a>.</p>
+<pre id="out">Running…</pre>
+<script>
+  fetch('/api/demo').then(r => r.json())
+    .then(d => { document.getElementById('out').textContent = JSON.stringify(d, null, 2); })
+    .catch(e => { document.getElementById('out').textContent = 'Demo failed: ' + e; });
+</script>
+</body>
+</html>

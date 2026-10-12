@@ -86,8 +86,15 @@ const { data } = await chatJson(gateway, { messages: [{ role: 'user', content: '
 
 ```bash
 npm ci
-npm run typecheck && npm test      # 29 tests, no network, no API keys
+npm run typecheck && npm test      # 30 tests, no network, no API keys
 ```
+
+## Live demo
+
+<https://llm-provider-gateway.vercel.app> runs `src/demo.ts` on Vercel with mock providers, so no
+model is called and no key is stored. The primary provider rate-limits until its retries run out
+and its circuit opens, the fallback answers in prose, and `chatJson` repairs it into validated
+JSON. The raw result is at `/api/demo`. Files: `public/index.html`, `api/demo.ts`, `vercel.json`.
 
 ## Design decisions
 
