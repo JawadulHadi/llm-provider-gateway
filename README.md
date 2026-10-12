@@ -120,4 +120,14 @@ Publishing to npm later is free for public packages (`npm publish`); `files` alr
   `examples/ollama-with-fallback.ts` against a real model to check your setup.
 - Token counts come from the provider. If a service omits them, usage and cost read as zero.
 
+## Changelog and contributing
+
+Every change adds an entry under **Unreleased** in [`CHANGELOG.md`](CHANGELOG.md) and updates this
+README when the API, behaviour or limits change. A CI job fails any pull request that skips the
+changelog (label it `skip-changelog` for changes that truly need none). Before opening a PR:
+
+```bash
+npm run typecheck && npm test && npm run build
+```
+
 See `NOTES.md` for mistakes made and fixed.
